@@ -97,7 +97,89 @@ col_age = np.asarray(col_age)
 col_outc = np.asarray(col_outc)
 
 print(str(len(col_outc)) + " entries selected")
-print(col_preg[:5])
-print(col_gluc[:5])
-print(col_age[:5])
-print(col_outc[:5])
+
+"""
+    Parallel coordinates
+"""
+"""
+print("Creating parallel coordinate plot")
+
+fig = plt.figure()
+
+for i in range(len(col_outc)):
+    row = [col_preg[i] * 13, col_gluc[i], col_bldp[i] * 1.5, col_skin[i] * 3, col_insu[i] / 3, (col_bmi[i] - 15) * 4, col_dpf[i] * 120, col_age[i] * 3,
+           col_outc[i] * 200]
+    plt.plot(range(len(row)), row)
+
+labels = ["Pregn", "Glucose", "Bld pr.", "Skin.", "Insulin", "BMI.", "DPF.", "Age", "Diabetes?"]
+plt.title("parallel coordinate plot")
+plt.xticks([0, 1, 2, 3, 4, 5, 6, 7, 8], labels=labels)
+plt.savefig("parallel_coordinates.pdf")
+plt.close()
+"""
+
+"""
+    Scatter plot matrix
+"""
+
+
+def calculate_position(x, y):
+    return y * len(columns) + x + 1
+
+
+def create_scatter_plot(x_axis_vals, y_axis_vals, x_axis_name, y_axis_name, pos_x, pos_y):
+    subplot_index = calculate_position(pos_x, pos_y)
+    col_map = {0: "green", 1: "red"}
+    colors = list(map(lambda x: col_map.get(x), col_outc))
+    plt.subplot(len(columns), len(columns), subplot_index)
+    plt.scatter(x_axis_vals, y_axis_vals, s=4, marker=".", alpha=0.7, c=colors)
+    if pos_x == 0:
+        plt.ylabel(y_axis_name)
+    if pos_y == len(columns) - 1:
+        plt.xlabel(x_axis_name)
+    plt.xticks([])
+    plt.yticks([])
+
+
+columns = {
+    "pregn.": col_preg,
+    "gluc.": col_gluc,
+    "press.": col_bldp,
+    "skin": col_skin,
+    "insulin": col_insu,
+    "BMI": col_bmi,
+    "DPF": col_dpf,
+    "age": col_age
+}
+
+print("Creating scatter matrix...")
+for x in range(len(columns)):
+    col1_name = list(columns.keys())[x]
+    for y in range(len(columns)):
+        col2_name = list(columns.keys())[y]
+        if y != x:
+            create_scatter_plot(columns.get(col1_name), columns.get(col2_name), col1_name, col2_name, x, y)
+
+for col_nb in range(len(columns)):
+    subplot_index = calculate_position(col_nb, col_nb)
+    data = columns.get(list(columns.keys())[col_nb])
+    red_data, green_data = [], []
+    for i in range(len(col_outc)):
+        if col_outc[i] == 0:
+            green_data.append(data[i])
+        else:
+            red_data.append(data[i])
+    plt.subplot(len(columns), len(columns), subplot_index)
+    plt.hist(green_data, bins=30, fc=(0, 0.5, 0, 0.5))
+    plt.hist(red_data, bins=30, fc=(1, 0, 0, 0.5))
+    plt.xticks([])
+    plt.yticks([])
+    if col_nb == 0:
+        plt.ylabel(list(columns.keys())[col_nb])
+    elif col_nb == len(columns) - 1:
+        plt.xlabel(list(columns.keys())[col_nb])
+
+plt.savefig("scatter_matrix.pdf")
+plt.close()
+
+print("Done")
