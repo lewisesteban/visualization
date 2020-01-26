@@ -6,7 +6,12 @@ import sys
 import random
 
 if len(sys.argv) < 2:
-    print("Required argument: fraction of entries to process (float)")
+    print("Arguments:")
+    print("1. (Required) Fraction of entries to process. Decimal number between 0 and 1. 1 means all, 0 means none. ")
+    print("2. (Optional) Index of a column to apply a limit on (0-based). 0 for pregnancy, 1 for glucose, etc.")
+    print("2. (Optional) Upper limit to apply on the chosen column. Must start with '<'. Example: '<24'")
+    print("3. (Optional) Lower limit to apply on the chosen column. Must start with '>'. Example: '>5.7'")
+    print("You may choose to apply only an upper limit or only a lower limit.")
     sys.exit(0)
 
 """
@@ -14,23 +19,26 @@ if len(sys.argv) < 2:
 """
 
 fraction = float(sys.argv[1])
-max_age = -1
-min_age = -1
+limit_max = -1
+limit_min = -1
+limit_col = -1
 if len(sys.argv) >= 3:
-    if sys.argv[2].startswith(">"):
-        min_age = int(sys.argv[2][1:])
-    elif sys.argv[2].startswith("<"):
-        max_age = int(sys.argv[2][1:])
+    limit_col = int(sys.argv[2])
 if len(sys.argv) >= 4:
     if sys.argv[3].startswith(">"):
-        min_age = int(sys.argv[3][1:])
+        limit_min = int(sys.argv[3][1:])
     elif sys.argv[3].startswith("<"):
-        max_age = int(sys.argv[3][1:])
+        limit_max = int(sys.argv[3][1:])
+if len(sys.argv) >= 5:
+    if sys.argv[4].startswith(">"):
+        limit_min = int(sys.argv[4][1:])
+    elif sys.argv[4].startswith("<"):
+        limit_max = int(sys.argv[4][1:])
 
-if max_age != -1:
-    print("Maximum age: " + str(max_age))
-if min_age != -1:
-    print("Minimum age " + str(min_age))
+if limit_max != -1:
+    print("Limit on column " + str(limit_col) + ": maximum " + str(limit_max))
+if limit_min != -1:
+    print("Limit on column " + str(limit_col) + ": minimum " + str(limit_min))
 if fraction != 1:
     print(str(fraction * 100) + "% of entries will be randomly selected")
 print()
@@ -61,11 +69,12 @@ with open(file_name, 'r') as f:
             first = False
         else:
             accepted = True
-            age = int(row[7])
-            if max_age != -1 and age > max_age:
-                accepted = False
-            if min_age != -1 and age < min_age:
-                accepted = False
+            if limit_col != -1:
+                limited_val = float(row[limit_col])
+                if limit_max != -1 and limited_val > limit_max:
+                    accepted = False
+                if limit_min != -1 and limited_val < limit_min:
+                    accepted = False
             if accepted:
                 nb_should_be_accepted = round(total_nb_entries * fraction)
                 if len(col_outc) - nb_should_be_accepted >= 2:
@@ -83,7 +92,7 @@ with open(file_name, 'r') as f:
                 col_insu.append(float(row[4]))
                 col_bmi.append(float(row[5]))
                 col_dpf.append(float(row[6]))
-                col_age.append(age)
+                col_age.append(int(row[7]))
                 col_outc.append(int(row[8]))
 
 col_preg = np.asarray(col_preg)
@@ -97,6 +106,7 @@ col_age = np.asarray(col_age)
 col_outc = np.asarray(col_outc)
 
 print(str(len(col_outc)) + " entries selected")
+print()
 
 """
     Parallel coordinates
