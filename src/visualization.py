@@ -14,25 +14,25 @@ if len(sys.argv) < 2:
 """
 
 fraction = float(sys.argv[1])
-max_pop = -1
-min_pop = -1
+max_age = -1
+min_age = -1
 if len(sys.argv) >= 3:
     if sys.argv[2].startswith(">"):
-        min_pop = int(sys.argv[2][1:])
+        min_age = int(sys.argv[2][1:])
     elif sys.argv[2].startswith("<"):
-        max_pop = int(sys.argv[2][1:])
+        max_age = int(sys.argv[2][1:])
 if len(sys.argv) >= 4:
     if sys.argv[3].startswith(">"):
-        min_pop = int(sys.argv[3][1:])
+        min_age = int(sys.argv[3][1:])
     elif sys.argv[3].startswith("<"):
-        max_pop = int(sys.argv[3][1:])
+        max_age = int(sys.argv[3][1:])
 
-if max_pop != -1:
-    print("Only cities with an initial population of " + str(max_pop) + " maximum will be selected")
-if min_pop != -1:
-    print("Only cities with an initial population of " + str(min_pop) + " minimum will be selected")
+if max_age != -1:
+    print("Maximum age: " + str(max_age))
+if min_age != -1:
+    print("Minimum age " + str(min_age))
 if fraction != 1:
-    print("Approximately " + str(fraction * 100) + "% of the cities will be randomly selected")
+    print(str(fraction * 100) + "% of entries will be randomly selected")
 print()
 
 """
@@ -42,24 +42,16 @@ print()
 file_name = 'data.csv'
 print("Reading '" + file_name + "'...")
 
-nb_cities = 0
-accepted_cities = []
-col_city = []
-col_year = []
-col_region = []
-col_npg = []  # natural population growth: difference between birth rate and death rate
-col_birth = []  # number of births this year per 1000 people
-col_death = []  # number of deaths this year per 1000 people
-col_migration = []  # number of migrants coming to the city this year per 1000 people (negative if people are leaving)
-col_population = []
-
-
-def safe_cast(val, to_type, default=None):
-    try:
-        return to_type(val)
-    except (ValueError, TypeError):
-        return default
-
+total_nb_entries = 0
+col_preg = []  # number of pregnancies
+col_gluc = []  # result of glucose tolerance test
+col_bldp = []  # blood pressure
+col_skin = []  # triceps skin fold thickness
+col_insu = []  # insulin
+col_bmi = []  # Body Mass Index
+col_dpf = []  # Diabetes Pedigree Function
+col_age = []  # age
+col_outc = []  # outcome: whether or not that person has diabetes
 
 with open(file_name, 'r') as f:
     reader = csv.reader(f)
@@ -68,46 +60,44 @@ with open(file_name, 'r') as f:
         if first:
             first = False
         else:
-            nb_cities += 1
-            year = safe_cast(row[0], int)
-            city = row[1]
-            population = safe_cast(row[6], float)
-            if year is not None:
-                accepted = True
-                if year == 1990:
-                    if population is None:
-                        accepted = False
-                    else:
-                        if max_pop != -1 and population > max_pop:
-                            accepted = False
-                        if min_pop != -1 and population < min_pop:
-                            accepted = False
-                    if accepted:
-                        nb_should_be_accepted = round((nb_cities - 1) * fraction)
-                        if len(accepted_cities) - nb_should_be_accepted >= 2:
-                            accepted = False
-                        elif len(accepted_cities) - nb_should_be_accepted <= -2:
-                            accepted = True
-                        else:
-                            accepted = random.uniform(0, 1) <= fraction
-                        if accepted:
-                            accepted_cities.append(city)
+            accepted = True
+            age = int(row[7])
+            if max_age != -1 and age > max_age:
+                accepted = False
+            if min_age != -1 and age < min_age:
+                accepted = False
+            if accepted:
+                nb_should_be_accepted = round(total_nb_entries * fraction)
+                if len(col_outc) - nb_should_be_accepted >= 2:
+                    accepted = False
+                elif len(col_outc) - nb_should_be_accepted <= -2:
+                    accepted = True
                 else:
-                    accepted = city in accepted_cities
-                if accepted:
-                    col_year.append(year)
-                    col_city.append(city)
-                    col_npg.append(safe_cast(row[2], float))
-                    col_birth.append(safe_cast(row[3], float))
-                    col_death.append(safe_cast(row[4], float))
-                    col_migration.append(safe_cast(row[5], float))
-                    col_population.append(population)
+                    accepted = random.uniform(0, 1) <= fraction
+                total_nb_entries += 1
+            if accepted:
+                col_preg.append(int(row[0]))
+                col_gluc.append(float(row[1]))
+                col_bldp.append(float(row[2]))
+                col_skin.append(float(row[3]))
+                col_insu.append(float(row[4]))
+                col_bmi.append(float(row[5]))
+                col_dpf.append(float(row[6]))
+                col_age.append(age)
+                col_outc.append(int(row[8]))
 
-col_year = np.asarray(col_year)
-col_npg = np.asarray(col_npg)
-col_birth = np.asarray(col_birth)
-col_death = np.asarray(col_death)
-col_migration = np.asarray(col_migration)
-col_population = np.asarray(col_population)
+col_preg = np.asarray(col_preg)
+col_gluc = np.asarray(col_gluc)
+col_bldp = np.asarray(col_bldp)
+col_skin = np.asarray(col_skin)
+col_insu = np.asarray(col_insu)
+col_bmi = np.asarray(col_bmi)
+col_dpf = np.asarray(col_dpf)
+col_age = np.asarray(col_age)
+col_outc = np.asarray(col_outc)
 
-print(str(len(accepted_cities)) + " cities selected, " + str(len(col_city)) + " selected entries in total")
+print(str(len(col_outc)) + " entries selected")
+print(col_preg[:5])
+print(col_gluc[:5])
+print(col_age[:5])
+print(col_outc[:5])
