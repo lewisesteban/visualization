@@ -105,28 +105,99 @@ col_dpf = np.asarray(col_dpf)
 col_age = np.asarray(col_age)
 col_outc = np.asarray(col_outc)
 
+columns = {
+    "pregn": col_preg,
+    "gluc": col_gluc,
+    "press": col_bldp,
+    "skin": col_skin,
+    "insulin": col_insu,
+    "BMI": col_bmi,
+    "DPF": col_dpf,
+    "age": col_age
+}
+
+full_names = ["Pregnancies", "Glucose test", "Blood pressure", "Triceps skin thickness", "Insulin", "B.M.I.", "D.P.F.",
+              "Age"]
+
 print(str(len(col_outc)) + " entries selected")
 print()
 
 """
+    User input
+"""
+
+print("Enter 1 for parallel coordinate plot, 2 for scatter plot matrix, or 3 for decision tree")
+choice = input()
+while choice != "1" and choice != "2" and choice != "3":
+    if choice.lower() == "exit" or choice.lower() == "quit" or choice.lower() == "cancel" or choice.lower() == "close":
+        sys.exit()
+    choice = input("Wrong choice. Please enter 1, 2 or 3:\n")
+
+
+"""
     Parallel coordinates
 """
+
+
+def to_scale(list, scale=100.0):
+    max_val = float(max(list))
+    min_val = float(min(list))
+    mult = scale / (max_val - min_val)
+    new_list = []
+    for elem in list:
+        new_list.append((float(elem) - min_val) * mult)
+    return new_list
+
+
+if choice == "1":
+    must_scale = input("Change values to make them on the same scale? Enter 'y' for yes and 'n' for no:\n").lower()
+    col_msg = "The available columns are: "
+    for i in range(len(full_names) - 1):
+        if i != 0:
+            col_msg += ", "
+        col_msg += full_names[i] + " (" + str(i) + ")"
+    print(col_msg)
+    print("Please choose three columns to include in the parallel coordinates plot, and enter their index (0-based).")
+    col1_index = int(input("First column: "))
+    col2_index = int(input("Second column: "))
+    col3_index = int(input("Third column: "))
+
+    print("Creating parallel coordinate plot...")
+
+    col1 = list(columns.values())[col1_index]
+    col2 = list(columns.values())[col2_index]
+    col3 = list(columns.values())[col3_index]
+    if must_scale == "y" or must_scale == "1" or must_scale == "yes":
+        col1 = to_scale(col1)
+        col2 = to_scale(col2)
+        col3 = to_scale(col3)
+    col4 = to_scale(col_outc, max([max(col1), max(col2), max(col3)]))
+
+    fig = plt.figure()
+    for i in range(len(col_outc)):
+        row = [col1[i], col2[i], col3[i], col4[i]]
+        plt.plot(range(len(row)), row)
+
+    labels = [full_names[col1_index], full_names[col2_index], full_names[col3_index], "Diabetes"]
+    plt.title("parallel coordinate plot")
+    plt.xticks([0, 1, 2, 3], labels=labels)
+    plt.savefig("parallel_coordinates.pdf")
+    plt.close()
+
+    print("Finished writing parallel_coordinates.pdf")
+    sys.exit()
+
+
 """
-print("Creating parallel coordinate plot")
-
-fig = plt.figure()
-
-for i in range(len(col_outc)):
-    row = [col_preg[i] * 13, col_gluc[i], col_bldp[i] * 1.5, col_skin[i] * 3, col_insu[i] / 3, (col_bmi[i] - 15) * 4, col_dpf[i] * 120, col_age[i] * 3,
-           col_outc[i] * 200]
-    plt.plot(range(len(row)), row)
-
-labels = ["Pregn", "Glucose", "Bld pr.", "Skin.", "Insulin", "BMI.", "DPF.", "Age", "Diabetes?"]
-plt.title("parallel coordinate plot")
-plt.xticks([0, 1, 2, 3, 4, 5, 6, 7, 8], labels=labels)
-plt.savefig("parallel_coordinates.pdf")
-plt.close()
+    Decision tree
 """
+
+
+if choice == "3":
+    print("Creating decision tree...")
+    print("Finished decision tree.pdf")
+    sys.exit()
+
 
 """
     Scatter plot matrix
@@ -151,18 +222,8 @@ def create_scatter_plot(x_axis_vals, y_axis_vals, x_axis_name, y_axis_name, pos_
     plt.yticks([])
 
 
-columns = {
-    "pregn.": col_preg,
-    "gluc.": col_gluc,
-    "press.": col_bldp,
-    "skin": col_skin,
-    "insulin": col_insu,
-    "BMI": col_bmi,
-    "DPF": col_dpf,
-    "age": col_age
-}
-
 print("Creating scatter matrix...")
+
 for x in range(len(columns)):
     col1_name = list(columns.keys())[x]
     for y in range(len(columns)):
@@ -192,4 +253,4 @@ for col_nb in range(len(columns)):
 plt.savefig("scatter_matrix.pdf")
 plt.close()
 
-print("Done")
+print("Finished writing scatter_matrix.pdf")
