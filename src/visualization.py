@@ -1,9 +1,12 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import csv
-import scipy.optimize
+from sklearn import tree
+import graphviz
 import sys
 import random
+import os
+os.environ["PATH"] += os.pathsep + 'C:/Program Files (x86)/Graphviz2.38/bin/'
 
 if len(sys.argv) < 2:
     print("Arguments:")
@@ -116,8 +119,8 @@ columns = {
     "age": col_age
 }
 
-full_names = ["Pregnancies", "Glucose test", "Blood pressure", "Triceps skin thickness", "Insulin", "B.M.I.", "D.P.F.",
-              "Age"]
+full_col_names = ["Pregnancies", "Glucose test", "Blood pressure", "Triceps skin thickness", "Insulin", "B.M.I.",
+                  "D.P.F.", "Age"]
 
 print(str(len(col_outc)) + " entries selected")
 print()
@@ -152,10 +155,10 @@ def to_scale(list, scale=100.0):
 if choice == "1":
     must_scale = input("Change values to make them on the same scale? Enter 'y' for yes and 'n' for no:\n").lower()
     col_msg = "The available columns are: "
-    for i in range(len(full_names) - 1):
+    for i in range(len(full_col_names) - 1):
         if i != 0:
             col_msg += ", "
-        col_msg += full_names[i] + " (" + str(i) + ")"
+        col_msg += full_col_names[i] + " (" + str(i) + ")"
     print(col_msg)
     print("Please choose three columns to include in the parallel coordinates plot, and enter their index (0-based).")
     col1_index = int(input("First column: "))
@@ -178,7 +181,7 @@ if choice == "1":
         row = [col1[i], col2[i], col3[i], col4[i]]
         plt.plot(range(len(row)), row)
 
-    labels = [full_names[col1_index], full_names[col2_index], full_names[col3_index], "Diabetes"]
+    labels = [full_col_names[col1_index], full_col_names[col2_index], full_col_names[col3_index], "Diabetes"]
     plt.title("parallel coordinate plot")
     plt.xticks([0, 1, 2, 3], labels=labels)
     plt.savefig("parallel_coordinates.pdf")
@@ -195,8 +198,36 @@ if choice == "1":
 
 if choice == "3":
     print("Creating decision tree...")
-    print("Finished decision tree.pdf")
-    sys.exit()
+    col_keys = list(columns.keys())
+
+    features = []
+    for i in range(len(col_outc)):
+        patient = []
+        for col_index in range(len(columns)):
+            patient.append(columns.get(col_keys[col_index])[i])
+        features.append(patient)
+
+    classifier = tree.DecisionTreeClassifier(criterion="entropy", min_samples_leaf=15, min_impurity_decrease=0.01)
+    classifier = classifier.fit(features, col_outc)
+
+    dot_data_minimal = tree.export_graphviz(classifier, out_file=None, feature_names=full_col_names,
+                                            class_names=["No diabetes", "Diabetes"], filled=True, rounded=True)
+    graph = graphviz.Source(dot_data_minimal)
+    graph.render(f"decision_tree")
+    print("Finished writing decision_tree.pdf")
+
+    print()
+    while True:
+        print("Please enter the information of the patient to test:")
+        patient = []
+        for i in range(len(full_col_names)):
+            patient.append(float(input(full_col_names[i] + ": ")))
+        patient = [patient]
+        prediction = classifier.predict(patient)
+        print("Prediction: " + ("no diabetes" if prediction == 0 else "has diabetes"))
+        keep_going = input("Enter 'y' to test another patient or 'n' to exit: ")
+        if keep_going.lower()[:1] != 'y' and keep_going != "1":
+            sys.exit()
 
 
 """
