@@ -127,7 +127,7 @@ print()
     User input
 """
 
-print("Enter 1 for parallel coordinate plot, 2 for scatter plot matrix, or 3 for decision tree")
+print("Enter 1 for scatter matrix, 2 parallel coordinates plot, or 3 for decision tree")
 choice = input()
 while choice != "1" and choice != "2" and choice != "3":
     if choice.lower() == "exit" or choice.lower() == "quit" or choice.lower() == "cancel" or choice.lower() == "close":
@@ -150,7 +150,7 @@ def to_scale(list, scale=100.0):
     return new_list
 
 
-if choice == "1":
+if choice == "2":
     must_scale = input("Change values to make them on the same scale? Enter 'y' for yes and 'n' for no:\n").lower()
     col_msg = "The available columns are: "
     for i in range(len(full_col_names) - 1):
