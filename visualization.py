@@ -10,8 +10,8 @@ if len(sys.argv) < 2:
     print("Arguments:")
     print("1. (Required) Fraction of entries to process. Decimal number between 0 and 1. 1 means all, 0 means none. ")
     print("2. (Optional) Index of a column to apply a limit on (0-based). 0 for pregnancy, 1 for glucose, etc.")
-    print("2. (Optional) Upper limit to apply on the chosen column. Must start with '<'. Example: '<24'")
-    print("3. (Optional) Lower limit to apply on the chosen column. Must start with '>'. Example: '>5.7'")
+    print("3. (Optional) Upper limit to apply on the chosen column. Must start with '<'. Example: '<24'")
+    print("4. (Optional) Lower limit to apply on the chosen column. Must start with '>'. Example: '>5.7'")
     print("You may choose to apply only an upper limit or only a lower limit.")
     sys.exit(0)
 
