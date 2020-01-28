@@ -5,8 +5,6 @@ from sklearn import tree
 import graphviz
 import sys
 import random
-import os
-os.environ["PATH"] += os.pathsep + 'C:/Program Files (x86)/Graphviz2.38/bin/'
 
 if len(sys.argv) < 2:
     print("Arguments:")
@@ -207,7 +205,7 @@ if choice == "3":
             patient.append(columns.get(col_keys[col_index])[i])
         features.append(patient)
 
-    classifier = tree.DecisionTreeClassifier(criterion="entropy", min_samples_leaf=15, min_impurity_decrease=0.01)
+    classifier = tree.DecisionTreeClassifier(criterion="entropy", min_samples_leaf=40, min_impurity_decrease=0.005)
     classifier = classifier.fit(features, col_outc)
 
     dot_data_minimal = tree.export_graphviz(classifier, out_file=None, feature_names=full_col_names,
@@ -225,6 +223,7 @@ if choice == "3":
         patient = [patient]
         prediction = classifier.predict(patient)
         print("Prediction: " + ("no diabetes" if prediction == 0 else "has diabetes"))
+        print()
         keep_going = input("Enter 'y' to test another patient or 'n' to exit: ")
         if keep_going.lower()[:1] != 'y' and keep_going != "1":
             sys.exit()
